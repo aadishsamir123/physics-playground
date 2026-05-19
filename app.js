@@ -7,12 +7,28 @@ const pauseButton = document.getElementById("pause-button");
 const resetButton = document.getElementById("reset-button");
 const simulationSpeedInput = document.getElementById("simulation-speed");
 const simulationSpeedValue = document.getElementById("simulation-speed-value");
+const projectileLineList = document.getElementById("projectile-line-list");
+const projectileGridEnabledInput = document.getElementById(
+  "projectile-grid-enabled",
+);
+const projectileGridSpacingInput = document.getElementById(
+  "projectile-grid-spacing",
+);
+const projectileGridOpacityInput = document.getElementById(
+  "projectile-grid-opacity",
+);
 const activeSimId = document.body.dataset.sim || "orbit";
 const rangeInputs = Array.from(
   document.querySelectorAll('input[type="range"]'),
 );
 
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+function getProjectileColor(index) {
+  const hue = (index * 137.508) % 360;
+  return `hsl(${hue.toFixed(1)} 78% 52%)`;
+}
+
 const state = {
   active: activeSimId,
   paused: false,
@@ -230,21 +246,39 @@ const pendulum = {
 
 const projectile = {
   title: "Projectile Lab",
-  hint: "Fire a shell, watch the arc, then line up the next launch.",
+  hint: "Fire a shell, compare paths, and keep the grid where it helps.",
   angle: 48,
   power: 126,
   drag: 0,
   gravity: 540,
+  gridEnabled: true,
+  gridSpacing: 48,
+  gridOpacity: 0.16,
   launched: false,
   elapsed: 0,
   origin: { x: 0, y: 0 },
   pos: { x: 0, y: 0 },
   velocity: { x: 0, y: 0 },
-  trail: [],
+  lines: [],
+  activeLine: null,
+  nextLineId: 1,
+  prepareIdleState() {
+    const groundY = state.height - 84;
+    this.origin = { x: 90, y: groundY };
+    this.pos = { x: this.origin.x, y: this.origin.y };
+    this.velocity = { x: 0, y: 0 };
+    this.elapsed = 0;
+    this.launched = false;
+    this.activeLine = null;
+  },
   reset() {
+    this.lines = [];
+    this.nextLineId = 1;
+    this.activeLine = null;
     this.launched = false;
     this.elapsed = 0;
-    this.trail = [];
+    this.prepareIdleState();
+    renderProjectileLegend();
   },
   launch() {
     const groundY = state.height - 84;
@@ -256,16 +290,22 @@ const projectile = {
       x: Math.cos(radians) * speed,
       y: -Math.sin(radians) * speed,
     };
+    const line = {
+      id: this.nextLineId,
+      label: `Shot ${this.nextLineId}`,
+      color: getProjectileColor(this.nextLineId - 1),
+      visible: true,
+      points: [{ x: this.pos.x, y: this.pos.y }],
+    };
+    this.nextLineId += 1;
+    this.lines.push(line);
+    this.activeLine = line;
     this.launched = true;
     this.elapsed = 0;
-    this.trail = [[this.pos.x, this.pos.y]];
+    renderProjectileLegend();
   },
   update(dt) {
     if (!this.launched) {
-      if (this.trail.length === 0) {
-        this.launch();
-        this.launched = false;
-      }
       return;
     }
 
@@ -277,16 +317,19 @@ const projectile = {
     this.velocity.y *= dragFactor;
     this.pos.x += this.velocity.x * dtSeconds;
     this.pos.y += this.velocity.y * dtSeconds;
-    this.trail.push([this.pos.x, this.pos.y]);
+    if (this.activeLine) {
+      this.activeLine.points.push({ x: this.pos.x, y: this.pos.y });
+    }
 
-    if (this.trail.length > 220) {
-      this.trail.shift();
+    if (this.activeLine && this.activeLine.points.length > 220) {
+      this.activeLine.points.shift();
     }
 
     const groundY = state.height - 84;
     if (this.pos.y >= groundY) {
       this.pos.y = groundY;
       this.launched = false;
+      this.activeLine = null;
     }
   },
   draw(ctx2d) {
@@ -295,32 +338,44 @@ const projectile = {
     ctx2d.fillStyle = "#ffffff";
     ctx2d.fillRect(0, 0, state.width, state.height);
 
-    ctx2d.strokeStyle = "#d1d5db";
-    ctx2d.lineWidth = 1;
-    for (let i = 1; i < 6; i += 1) {
-      const y = groundY - i * 90;
-      ctx2d.beginPath();
-      ctx2d.moveTo(48, y);
-      ctx2d.lineTo(state.width - 48, y);
-      ctx2d.stroke();
+    if (this.gridEnabled) {
+      const spacing = Math.max(16, this.gridSpacing);
+      ctx2d.strokeStyle = `rgba(148, 163, 184, ${this.gridOpacity})`;
+      ctx2d.lineWidth = 1;
+      for (let x = 0; x <= state.width; x += spacing) {
+        ctx2d.beginPath();
+        ctx2d.moveTo(x, 0);
+        ctx2d.lineTo(x, groundY);
+        ctx2d.stroke();
+      }
+      for (let y = 0; y <= groundY; y += spacing) {
+        ctx2d.beginPath();
+        ctx2d.moveTo(0, y);
+        ctx2d.lineTo(state.width, y);
+        ctx2d.stroke();
+      }
     }
 
     ctx2d.fillStyle = "#f3f4f6";
     ctx2d.fillRect(0, groundY, state.width, state.height - groundY);
 
-    if (this.trail.length > 1) {
+    this.lines.forEach((line) => {
+      if (!line.visible || line.points.length <= 1) {
+        return;
+      }
+
       ctx2d.beginPath();
-      this.trail.forEach(([tx, ty], index) => {
+      line.points.forEach(({ x, y }, index) => {
         if (index === 0) {
-          ctx2d.moveTo(tx, ty);
+          ctx2d.moveTo(x, y);
         } else {
-          ctx2d.lineTo(tx, ty);
+          ctx2d.lineTo(x, y);
         }
       });
-      ctx2d.strokeStyle = "#f59e0b";
+      ctx2d.strokeStyle = line.color;
       ctx2d.lineWidth = 2.5;
       ctx2d.stroke();
-    }
+    });
 
     const shellX = this.launched ? this.pos.x : this.origin.x;
     const shellY = this.launched ? this.pos.y : this.origin.y;
@@ -337,7 +392,7 @@ const projectile = {
     ctx2d.restore();
   },
   count() {
-    return 1;
+    return this.lines.length || 1;
   },
 };
 
@@ -359,9 +414,8 @@ function resizeCanvas() {
     orbit.reset();
   }
 
-  if (state.active === "projectile" && projectile.trail.length === 0) {
-    projectile.launch();
-    projectile.launched = false;
+  if (state.active === "projectile" && projectile.lines.length === 0) {
+    projectile.prepareIdleState();
   }
 }
 
@@ -380,7 +434,7 @@ function initializeCurrentSim() {
   stageTitle.textContent = sim.title;
   simHint.textContent = sim.hint;
   resetButton.textContent =
-    state.active === "projectile" ? "Clear path" : "Reset";
+    state.active === "projectile" ? "Clear paths" : "Reset";
 }
 
 function syncSimulationSpeed() {
@@ -396,11 +450,54 @@ function syncRangeLabels() {
 
     if (input.id === "projectile-angle") {
       valueNode.textContent = `${input.value}°`;
+    } else if (input.id === "projectile-grid-spacing") {
+      valueNode.textContent = `${input.value} px`;
+    } else if (input.id === "projectile-grid-opacity") {
+      valueNode.textContent = `${Math.round(Number(input.value) * 100)}%`;
     } else if (input.id === "simulation-speed") {
       valueNode.textContent = `${Number(input.value).toFixed(2)}x`;
     } else {
       valueNode.textContent = input.value;
     }
+  });
+}
+
+function renderProjectileLegend() {
+  if (!projectileLineList) {
+    return;
+  }
+
+  projectileLineList.replaceChildren();
+
+  if (projectile.lines.length === 0) {
+    const emptyState = document.createElement("div");
+    emptyState.className = "trajectory-empty";
+    emptyState.textContent = "Fire a shot to create a path here.";
+    projectileLineList.appendChild(emptyState);
+    return;
+  }
+
+  projectile.lines.forEach((line) => {
+    const item = document.createElement("label");
+    item.className = "trajectory-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = line.visible;
+    checkbox.addEventListener("change", () => {
+      line.visible = checkbox.checked;
+    });
+
+    const swatch = document.createElement("span");
+    swatch.className = "trajectory-swatch";
+    swatch.style.background = line.color;
+
+    const text = document.createElement("span");
+    text.className = "trajectory-label";
+    text.textContent = line.label;
+
+    item.append(checkbox, swatch, text);
+    projectileLineList.appendChild(item);
   });
 }
 
@@ -507,6 +604,26 @@ bindInput("projectile-drag", (event) => {
   syncRangeLabels();
 });
 
+if (projectileGridSpacingInput) {
+  projectileGridSpacingInput.addEventListener("input", (event) => {
+    projectile.gridSpacing = Number(event.target.value);
+    syncRangeLabels();
+  });
+}
+
+if (projectileGridOpacityInput) {
+  projectileGridOpacityInput.addEventListener("input", (event) => {
+    projectile.gridOpacity = Number(event.target.value);
+    syncRangeLabels();
+  });
+}
+
+if (projectileGridEnabledInput) {
+  projectileGridEnabledInput.addEventListener("change", (event) => {
+    projectile.gridEnabled = event.target.checked;
+  });
+}
+
 simulationSpeedInput.addEventListener("input", (event) => {
   state.speed = Number(event.target.value);
   syncSimulationSpeed();
@@ -595,5 +712,6 @@ window.addEventListener("resize", resizeCanvas);
 syncRangeLabels();
 syncSimulationSpeed();
 initializeCurrentSim();
+renderProjectileLegend();
 resizeCanvas();
 requestAnimationFrame(animate);

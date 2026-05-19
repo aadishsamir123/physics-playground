@@ -44,6 +44,65 @@
               </div>
             </div>
           </div>
+          <div class="projectile-tools">
+            <section
+              class="projectile-history"
+              aria-labelledby="trajectory-title"
+            >
+              <div class="projectile-tools-head">
+                <div>
+                  <h3 id="trajectory-title">Path history</h3>
+                  <p>Toggle any shot below the graph.</p>
+                </div>
+              </div>
+              <div class="trajectory-list" id="projectile-line-list"></div>
+            </section>
+
+            <section class="projectile-grid" aria-labelledby="grid-title">
+              <div class="projectile-tools-head">
+                <div>
+                  <h3 id="grid-title">Reference grid</h3>
+                  <p>Adjust the background grid for easier comparison.</p>
+                </div>
+              </div>
+              <label class="grid-toggle-row">
+                <span>Show grid</span>
+                <input id="projectile-grid-enabled" type="checkbox" checked />
+              </label>
+              <label>
+                Grid spacing
+                <input
+                  id="projectile-grid-spacing"
+                  type="range"
+                  min="24"
+                  max="120"
+                  step="4"
+                  value="48"
+                />
+                <span
+                  class="range-value"
+                  data-value-for="projectile-grid-spacing"
+                  >48 px</span
+                >
+              </label>
+              <label>
+                Grid opacity
+                <input
+                  id="projectile-grid-opacity"
+                  type="range"
+                  min="0.08"
+                  max="0.35"
+                  step="0.01"
+                  value="0.16"
+                />
+                <span
+                  class="range-value"
+                  data-value-for="projectile-grid-opacity"
+                  >16%</span
+                >
+              </label>
+            </section>
+          </div>
         </section>
 
         <aside class="control-card">
