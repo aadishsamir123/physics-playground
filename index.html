@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Physics Playground</title>
+    <meta
+      name="description"
+      content="Choose a physics simulation from a simple gallery."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="gallery-page">
+    <div class="page-shell gallery-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <h1>Physics Playground</h1>
+          <p class="lede">
+            Pick a simulation to open. Each one lives on its own page so it can
+            run on its own without the interface getting in the way.
+          </p>
+        </div>
+      </header>
+
+      <main>
+        <section class="gallery-grid" aria-label="Simulation gallery">
+          <button
+            class="gallery-card"
+            type="button"
+            data-sim-target="sim/orbit.html"
+          >
+            <span class="gallery-card-title">Orbit Lab</span>
+            <span class="gallery-card-desc"
+              >Move satellites around a central star.</span
+            >
+          </button>
+          <button
+            class="gallery-card"
+            type="button"
+            data-sim-target="sim/pendulum.html"
+          >
+            <span class="gallery-card-title">Pendulum Lab</span>
+            <span class="gallery-card-desc"
+              >Drag a bob and watch the swing settle.</span
+            >
+          </button>
+          <button
+            class="gallery-card"
+            type="button"
+            data-sim-target="sim/projectile.html"
+          >
+            <span class="gallery-card-title">Projectile Lab</span>
+            <span class="gallery-card-desc"
+              >Fire a shell and tune the arc.</span
+            >
+          </button>
+        </section>
+      </main>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay" aria-hidden="true">
+      <div class="loading-card" role="status" aria-live="polite">
+        <span class="loading-label">Loading...</span>
+      </div>
+    </div>
+
+    <script src="gallery.js"></script>
+  </body>
+</html>

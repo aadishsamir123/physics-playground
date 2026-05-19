@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pendulum Lab</title>
+    <meta name="description" content="Pendulum Lab physics simulation." />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body class="sim-page" data-sim="pendulum">
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <a class="back-link" href="../index.html">Back to gallery</a>
+          <h1>Physics Playground</h1>
+          <p class="lede">
+            Pendulum Lab lets you drag the bob, change the air resistance, and
+            change the size and length.
+          </p>
+        </div>
+      </header>
+
+      <main class="app-grid">
+        <section class="stage-card">
+          <div class="stage-topbar">
+            <h2 id="stage-title">Pendulum Lab</h2>
+            <div class="stage-actions">
+              <button class="ghost-button" id="pause-button" type="button">
+                Pause
+              </button>
+              <button class="ghost-button" id="reset-button" type="button">
+                Reset
+              </button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas
+              id="simulation-canvas"
+              aria-label="Physics simulation canvas"
+            ></canvas>
+            <div class="canvas-overlay">
+              <div class="overlay-chip" id="sim-hint">
+                Drag the bob, release it, and watch it swing back and forth.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-card">
+          <div class="global-controls">
+            <label class="speed-control" for="simulation-speed">
+              <span>Simulation speed</span>
+              <div class="speed-row">
+                <input
+                  id="simulation-speed"
+                  type="range"
+                  min="0.25"
+                  max="2"
+                  step="0.05"
+                  value="1"
+                />
+                <strong id="simulation-speed-value">1.00x</strong>
+              </div>
+            </label>
+          </div>
+
+          <div class="controls-stack">
+            <section class="control-panel active" data-panel="pendulum">
+              <h3>Pendulum Lab</h3>
+              <p>
+                Drag the bob, release it, and watch it swing back and forth.
+              </p>
+              <label>
+                Length
+                <input
+                  id="pendulum-length"
+                  type="range"
+                  min="120"
+                  max="300"
+                  value="210"
+                />
+                <span class="range-value" data-value-for="pendulum-length"
+                  >210</span
+                >
+              </label>
+              <label>
+                Air resistance
+                <input
+                  id="pendulum-air"
+                  type="range"
+                  min="0"
+                  max="24"
+                  value="4"
+                />
+                <span class="range-value" data-value-for="pendulum-air">4</span>
+              </label>
+              <label>
+                Bob size
+                <input
+                  id="pendulum-bob-size"
+                  type="range"
+                  min="10"
+                  max="30"
+                  value="18"
+                />
+                <span class="range-value" data-value-for="pendulum-bob-size"
+                  >18</span
+                >
+              </label>
+              <button class="primary-button" id="kick-pendulum" type="button">
+                Reset swing
+              </button>
+            </section>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="../app.js"></script>
+  </body>
+</html>

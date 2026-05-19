@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orbit Lab</title>
+    <meta name="description" content="Orbit Lab physics simulation." />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body class="sim-page" data-sim="orbit">
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <a class="back-link" href="../index.html">Back to gallery</a>
+          <h1>Physics Playground</h1>
+          <p class="lede">
+            Orbit Lab lets you tune gravity, launch energy, and trail length.
+          </p>
+        </div>
+      </header>
+
+      <main class="app-grid">
+        <section class="stage-card">
+          <div class="stage-topbar">
+            <h2 id="stage-title">Orbit Lab</h2>
+            <div class="stage-actions">
+              <button class="ghost-button" id="pause-button" type="button">
+                Pause
+              </button>
+              <button class="ghost-button" id="reset-button" type="button">
+                Reset
+              </button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas
+              id="simulation-canvas"
+              aria-label="Physics simulation canvas"
+            ></canvas>
+            <div class="canvas-overlay">
+              <div class="overlay-chip" id="sim-hint">
+                Spin up a miniature solar system and fling satellites into
+                orbit.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-card">
+          <div class="global-controls">
+            <label class="speed-control" for="simulation-speed">
+              <span>Simulation speed</span>
+              <div class="speed-row">
+                <input
+                  id="simulation-speed"
+                  type="range"
+                  min="0.25"
+                  max="2"
+                  step="0.05"
+                  value="1"
+                />
+                <strong id="simulation-speed-value">1.00x</strong>
+              </div>
+            </label>
+          </div>
+
+          <div class="controls-stack">
+            <section class="control-panel active" data-panel="orbit">
+              <h3>Orbit Lab</h3>
+              <p>Gravity-sling satellites around a fixed star.</p>
+              <label>
+                Gravity strength
+                <input
+                  id="orbit-gravity"
+                  type="range"
+                  min="140"
+                  max="900"
+                  value="520"
+                />
+                <span class="range-value" data-value-for="orbit-gravity"
+                  >520</span
+                >
+              </label>
+              <label>
+                Spawn energy
+                <input
+                  id="orbit-speed"
+                  type="range"
+                  min="45"
+                  max="260"
+                  value="150"
+                />
+                <span class="range-value" data-value-for="orbit-speed"
+                  >150</span
+                >
+              </label>
+              <label>
+                Satellite count
+                <input
+                  id="orbit-count"
+                  type="range"
+                  min="3"
+                  max="14"
+                  value="7"
+                />
+                <span class="range-value" data-value-for="orbit-count">7</span>
+              </label>
+              <label>
+                Trail length
+                <input
+                  id="orbit-trail"
+                  type="range"
+                  min="6"
+                  max="60"
+                  value="26"
+                />
+                <span class="range-value" data-value-for="orbit-trail">26</span>
+              </label>
+              <button class="primary-button" id="spawn-body" type="button">
+                Spawn satellite
+              </button>
+            </section>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="../app.js"></script>
+  </body>
+</html>
