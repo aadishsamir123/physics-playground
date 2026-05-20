@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brownian Motion</title>
+    <meta name="description" content="Brownian motion simulation with trail, fluid particles, and kick/drag controls." />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body class="sim-page" data-sim="brownian">
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <a class="back-link" href="../index.html">Back to gallery</a>
+          <h1>Physics Playground</h1>
+          <p class="lede">A large particle receives random kicks from unseen fluid molecules — Brownian motion.</p>
+        </div>
+      </header>
+
+      <main class="app-grid">
+        <section class="stage-card">
+          <div class="stage-topbar">
+            <h2 id="stage-title">Brownian Motion</h2>
+            <div class="stage-actions">
+              <button class="ghost-button" id="pause-button" type="button">Pause</button>
+              <button class="ghost-button" id="reset-button" type="button">Reset</button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="simulation-canvas" aria-label="Physics simulation canvas"></canvas>
+            <div class="canvas-overlay">
+              <div class="overlay-chip" id="sim-hint">Random small kicks to a particle.</div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-card">
+          <div class="global-controls">
+            <label class="speed-control" for="simulation-speed">
+              <span>Simulation speed</span>
+              <div class="speed-row">
+                <input id="simulation-speed" type="range" min="0.25" max="2" step="0.05" value="1" />
+                <strong id="simulation-speed-value">1.00x</strong>
+              </div>
+            </label>
+          </div>
+
+          <div class="controls-stack">
+            <div class="control-group-title">Physics</div>
+
+            <label class="control-panel active">
+              <span>Kick strength</span>
+              <div class="speed-row">
+                <input id="brownian-kick" type="range" min="20" max="600" step="10" value="200" />
+                <span class="range-value" data-value-for="brownian-kick">200</span>
+              </div>
+            </label>
+
+            <label class="control-panel active">
+              <span>Drag (friction)</span>
+              <div class="speed-row">
+                <input id="brownian-drag" type="range" min="0.5" max="0.999" step="0.01" value="0.92" />
+                <span class="range-value" data-value-for="brownian-drag">0.92</span>
+              </div>
+            </label>
+
+            <div class="control-group-title">Display</div>
+
+            <label class="control-panel active">
+              <span>Trail length</span>
+              <div class="speed-row">
+                <input id="brownian-trail" type="range" min="0" max="200" step="5" value="60" />
+                <span class="range-value" data-value-for="brownian-trail">60</span>
+              </div>
+            </label>
+
+            <label class="toggle-row">
+              <input id="brownian-fluid" type="checkbox" checked />
+              <span>Show fluid particles</span>
+            </label>
+          </div>
+        </aside>
+      </main>
+    </div>
+    <script src="../app.js"></script>
+  </body>
+</html>

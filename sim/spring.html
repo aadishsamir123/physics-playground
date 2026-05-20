@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spring Mass</title>
+    <meta name="description" content="Mass on a spring showing simple harmonic motion." />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body class="sim-page" data-sim="spring">
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <a class="back-link" href="../index.html">Back to gallery</a>
+          <h1>Physics Playground</h1>
+          <p class="lede">Mass on a spring — adjust stiffness, mass and damping to see how oscillation changes.</p>
+        </div>
+      </header>
+
+      <main class="app-grid">
+        <section class="stage-card">
+          <div class="stage-topbar">
+            <h2 id="stage-title">Spring Mass</h2>
+            <div class="stage-actions">
+              <button class="ghost-button" id="pause-button" type="button">Pause</button>
+              <button class="ghost-button" id="reset-button" type="button">Reset</button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="simulation-canvas" aria-label="Physics simulation canvas"></canvas>
+            <div class="canvas-overlay">
+              <div class="overlay-chip" id="sim-hint">A mass oscillates on a spring.</div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-card">
+          <div class="global-controls">
+            <label class="speed-control" for="simulation-speed">
+              <span>Simulation speed</span>
+              <div class="speed-row">
+                <input id="simulation-speed" type="range" min="0.25" max="2" step="0.05" value="1" />
+                <strong id="simulation-speed-value">1.00x</strong>
+              </div>
+            </label>
+          </div>
+
+          <div class="controls-stack">
+            <div class="control-group-title">Spring Parameters</div>
+
+            <label class="control-panel active">
+              <span>Spring constant (k)</span>
+              <div class="speed-row">
+                <input id="spring-k" type="range" min="0.5" max="30" step="0.5" value="5" />
+                <span class="range-value" data-value-for="spring-k">5</span>
+              </div>
+            </label>
+
+            <label class="control-panel active">
+              <span>Mass (m)</span>
+              <div class="speed-row">
+                <input id="spring-mass" type="range" min="0.2" max="20" step="0.2" value="1" data-unit=" kg" />
+                <span class="range-value" data-value-for="spring-mass">1 kg</span>
+              </div>
+            </label>
+
+            <label class="control-panel active">
+              <span>Damping</span>
+              <div class="speed-row">
+                <input id="spring-damping" type="range" min="0" max="6" step="0.1" value="0.8" />
+                <span class="range-value" data-value-for="spring-damping">0.8</span>
+              </div>
+            </label>
+
+            <label class="control-panel active">
+              <span>Initial displacement</span>
+              <div class="speed-row">
+                <input id="spring-amp" type="range" min="20" max="200" step="5" value="120" data-unit=" px" />
+                <span class="range-value" data-value-for="spring-amp">120 px</span>
+              </div>
+            </label>
+          </div>
+        </aside>
+      </main>
+    </div>
+    <script src="../app.js"></script>
+  </body>
+</html>
