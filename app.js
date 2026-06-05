@@ -168,6 +168,7 @@ const pendulum = {
   hint: "A damped pendulum swings through a long, satisfying arc.",
   length: 210,
   airResistance: 4,
+  mass: 10,
   bobSize: 18,
   angle: -0.62,
   velocity: 0,
@@ -178,13 +179,17 @@ const pendulum = {
   reset() { this.angle = -0.62; this.velocity = 0; },
   update(dt) {
     const dtSeconds = dt / 1000;
-    const gravity = 9.6;
-    const airForce = this.airResistance * 0.01;
+    const gravity = 9.81;
+    const pixelsPerMeter = 100;
+    const lengthInMeters = this.length / pixelsPerMeter;
+    const airForce = this.airResistance * 0.02; // Damping
     if (this.dragging) return;
-    const acceleration = (-gravity / this.length) * Math.sin(this.angle) - airForce * this.velocity;
-    this.velocity += acceleration * dtSeconds * 60;
-    this.velocity = Math.max(-2.1, Math.min(2.1, this.velocity));
-    this.angle += this.velocity * dtSeconds * 60;
+    
+    // Standard pendulum equation: alpha = -(g/L) * sin(theta) - damping * omega
+    const acceleration = (-gravity / lengthInMeters) * Math.sin(this.angle) - (airForce / this.mass) * this.velocity;
+    this.velocity += acceleration * dtSeconds;
+    this.velocity = Math.max(-10, Math.min(10, this.velocity));
+    this.angle += this.velocity * dtSeconds;
   },
   draw(ctx2d) {
     const anchorX = state.width * 0.5;
@@ -461,7 +466,7 @@ const circular = {
     if (this.showVelocity) {
       const vx = -Math.sin(this.angle);
       const vy = Math.cos(this.angle);
-      const vLen = 50;
+      const vLen = this.speed * this.radius * 0.25;
       ctx2d.strokeStyle = "#16a34a";
       ctx2d.lineWidth = 2.5;
       ctx2d.beginPath();
@@ -481,7 +486,7 @@ const circular = {
       const aLen = Math.hypot(ax, ay);
       const anx = ax / aLen;
       const any = ay / aLen;
-      const cLen = 44;
+      const cLen = this.speed * this.speed * this.radius * 0.1;
       ctx2d.strokeStyle = "#dc2626";
       ctx2d.lineWidth = 2.5;
       ctx2d.beginPath();
@@ -1094,16 +1099,25 @@ const diffusion = {
 const brownian = {
   title: "Brownian Motion",
   hint: "A large particle receives random kicks from unseen fluid molecules. Adjust kick strength.",
-  p: { x: 0, y: 0, vx: 0, vy: 0 },
+  particles: [],
+  numParticles: 1,
+  infiniteTrail: false,
   kickStrength: 200,
   drag: 0.92,
   trailLength: 60,
   showFluid: true,
-  trail: [],
   fluid: [],
   reset() {
-    this.p = { x: state.width / 2, y: state.height / 2, vx: 0, vy: 0 };
-    this.trail = [];
+    this.particles = [];
+    for (let i = 0; i < this.numParticles; i++) {
+      this.particles.push({
+        x: state.width / 2 + (Math.random() - 0.5) * 40,
+        y: state.height / 2 + (Math.random() - 0.5) * 40,
+        vx: 0,
+        vy: 0,
+        trail: []
+      });
+    }
     this.fluid = [];
     for (let i = 0; i < 60; i++) {
       this.fluid.push({ x: Math.random() * state.width, y: Math.random() * state.height, vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30, hue: 180 + Math.random() * 60, r: 2 + Math.random() * 2 });
@@ -1111,21 +1125,26 @@ const brownian = {
   },
   update(dt) {
     const dtSeconds = dt / 1000;
-    this.p.vx += (Math.random() - 0.5) * this.kickStrength * dtSeconds * 60;
-    this.p.vy += (Math.random() - 0.5) * this.kickStrength * dtSeconds * 60;
-    this.p.vx *= this.drag;
-    this.p.vy *= this.drag;
-    this.p.x += this.p.vx * dtSeconds;
-    this.p.y += this.p.vy * dtSeconds;
+    
+    this.particles.forEach(p => {
+      p.vx += (Math.random() - 0.5) * this.kickStrength * dtSeconds * 60;
+      p.vy += (Math.random() - 0.5) * this.kickStrength * dtSeconds * 60;
+      p.vx *= this.drag;
+      p.vy *= this.drag;
+      p.x += p.vx * dtSeconds;
+      p.y += p.vy * dtSeconds;
 
-    // Wall bounce
-    if (this.p.x < 14) { this.p.x = 14; this.p.vx = Math.abs(this.p.vx); }
-    if (this.p.x > state.width - 14) { this.p.x = state.width - 14; this.p.vx = -Math.abs(this.p.vx); }
-    if (this.p.y < 14) { this.p.y = 14; this.p.vy = Math.abs(this.p.vy); }
-    if (this.p.y > state.height - 14) { this.p.y = state.height - 14; this.p.vy = -Math.abs(this.p.vy); }
+      // Wall bounce
+      if (p.x < 14) { p.x = 14; p.vx = Math.abs(p.vx); }
+      if (p.x > state.width - 14) { p.x = state.width - 14; p.vx = -Math.abs(p.vx); }
+      if (p.y < 14) { p.y = 14; p.vy = Math.abs(p.vy); }
+      if (p.y > state.height - 14) { p.y = state.height - 14; p.vy = -Math.abs(p.vy); }
 
-    this.trail.push([this.p.x, this.p.y]);
-    if (this.trail.length > this.trailLength) this.trail.shift();
+      p.trail.push([p.x, p.y]);
+      while (!this.infiniteTrail && p.trail.length > this.trailLength) {
+        p.trail.shift();
+      }
+    });
 
     // Fluid particles drift
     this.fluid.forEach((f) => {
@@ -1150,30 +1169,33 @@ const brownian = {
       });
     }
 
-    // Trail
-    if (this.trail.length > 1) {
-      ctx2d.beginPath();
-      this.trail.forEach(([x, y], i) => {
-        const alpha = i / this.trail.length;
-        if (i === 0) ctx2d.moveTo(x, y); else ctx2d.lineTo(x, y);
-      });
-      ctx2d.strokeStyle = "rgba(251,191,36,0.5)";
-      ctx2d.lineWidth = 2;
-      ctx2d.stroke();
-    }
+    // Trails
+    ctx2d.strokeStyle = "rgba(251,191,36,0.5)";
+    ctx2d.lineWidth = 2;
+    this.particles.forEach(p => {
+      if (p.trail.length > 1) {
+        ctx2d.beginPath();
+        p.trail.forEach(([x, y], i) => {
+          if (i === 0) ctx2d.moveTo(x, y); else ctx2d.lineTo(x, y);
+        });
+        ctx2d.stroke();
+      }
+    });
 
-    // Main particle
-    const grad = ctx2d.createRadialGradient(this.p.x - 5, this.p.y - 5, 1, this.p.x, this.p.y, 14);
-    grad.addColorStop(0, "#fbbf24");
-    grad.addColorStop(1, "#d97706");
-    ctx2d.fillStyle = grad;
-    ctx2d.beginPath();
-    ctx2d.arc(this.p.x, this.p.y, 14, 0, Math.PI * 2);
-    ctx2d.fill();
+    // Main particles
+    this.particles.forEach(p => {
+      const grad = ctx2d.createRadialGradient(p.x - 5, p.y - 5, 1, p.x, p.y, 14);
+      grad.addColorStop(0, "#fbbf24");
+      grad.addColorStop(1, "#d97706");
+      ctx2d.fillStyle = grad;
+      ctx2d.beginPath();
+      ctx2d.arc(p.x, p.y, 14, 0, Math.PI * 2);
+      ctx2d.fill();
+    });
 
     ctx2d.restore();
   },
-  count() { return 1; },
+  count() { return this.particles.length; },
 };
 
 // ─── LISSAJOUS ────────────────────────────────────────────────────────────────
@@ -1241,89 +1263,6 @@ const lissajous = {
   count() { return 1; },
 };
 
-// ─── HARMONIC OSCILLATOR ──────────────────────────────────────────────────────
-const harmonic = {
-  title: "Harmonic Oscillator",
-  hint: "Superposition of three oscillators. Toggle individual components.",
-  t: 0,
-  showComponents: true,
-  components: [
-    { A: 70, f: 1.0, phi: 0, color: "#ef4444", enabled: true },
-    { A: 40, f: 2.0, phi: 0.5, color: "#3b82f6", enabled: true },
-    { A: 22, f: 3.0, phi: 1.1, color: "#10b981", enabled: true },
-  ],
-  history: [],
-  maxHistory: 300,
-  reset() { this.t = 0; this.history = []; },
-  update(dt) {
-    this.t += dt / 1000;
-    let y = 0;
-    this.components.forEach((c) => { if (c.enabled) y += c.A * Math.sin(c.f * this.t * 2 + c.phi); });
-    this.history.push(y);
-    if (this.history.length > this.maxHistory) this.history.shift();
-  },
-  draw(ctx2d) {
-    const cx = state.width * 0.5;
-    const cy = state.height * 0.5;
-    ctx2d.save();
-    ctx2d.fillStyle = "#fff";
-    ctx2d.fillRect(0, 0, state.width, state.height);
-
-    // Scrolling history trace
-    if (this.history.length > 1) {
-      ctx2d.strokeStyle = "#1f2937";
-      ctx2d.lineWidth = 2;
-      ctx2d.beginPath();
-      this.history.forEach((v, i) => {
-        const hx = (i / this.maxHistory) * state.width;
-        const hy = cy - v;
-        if (i === 0) ctx2d.moveTo(hx, hy); else ctx2d.lineTo(hx, hy);
-      });
-      ctx2d.stroke();
-    }
-
-    // Component waves
-    if (this.showComponents) {
-      this.components.forEach((c) => {
-        if (!c.enabled) return;
-        ctx2d.strokeStyle = c.color + "66";
-        ctx2d.lineWidth = 1.5;
-        ctx2d.beginPath();
-        for (let x = 0; x <= state.width; x += 3) {
-          const tt = (x / state.width) * this.maxHistory / 60;
-          const y = cy - c.A * Math.sin(c.f * (this.t - tt) * 2 + c.phi);
-          if (x === 0) ctx2d.moveTo(x, y); else ctx2d.lineTo(x, y);
-        }
-        ctx2d.stroke();
-      });
-    }
-
-    // Live oscillator balls on the right
-    const ballX = state.width - 80;
-    this.components.forEach((c, i) => {
-      if (!c.enabled) return;
-      const bcy = cy - 60 + i * 60;
-      const ballY = bcy + c.A * Math.sin(c.f * this.t * 2 + c.phi) * 0.4;
-      ctx2d.strokeStyle = c.color + "44";
-      ctx2d.lineWidth = 1;
-      ctx2d.beginPath(); ctx2d.moveTo(ballX, bcy - 30); ctx2d.lineTo(ballX, bcy + 30); ctx2d.stroke();
-      ctx2d.fillStyle = c.color;
-      ctx2d.beginPath();
-      ctx2d.arc(ballX, ballY, 7, 0, Math.PI * 2);
-      ctx2d.fill();
-    });
-
-    // Center line
-    ctx2d.strokeStyle = "#e5e7eb";
-    ctx2d.lineWidth = 1;
-    ctx2d.setLineDash([4, 4]);
-    ctx2d.beginPath(); ctx2d.moveTo(0, cy); ctx2d.lineTo(state.width, cy); ctx2d.stroke();
-    ctx2d.setLineDash([]);
-
-    ctx2d.restore();
-  },
-  count() { return 1; },
-};
 
 // ─── ELECTRIC FIELD ───────────────────────────────────────────────────────────
 const electric = {
@@ -1469,7 +1408,7 @@ function drawArrowhead(ctx2d, x, y, nx, ny, color, size = 7) {
 }
 
 // ─── REGISTRY ─────────────────────────────────────────────────────────────────
-const simulations = { orbit, pendulum, projectile, circular, spring, wave, bounce, collision, diffusion, brownian, lissajous, harmonic, electric };
+const simulations = { orbit, pendulum, projectile, circular, spring, wave, bounce, collision, diffusion, brownian, lissajous, electric };
 
 // ─── CANVAS RESIZE ────────────────────────────────────────────────────────────
 function resizeCanvas() {
@@ -1587,6 +1526,7 @@ bindInput("orbit-trail", (e) => { orbit.trailLength = Number(e.target.value); sy
 bindClick("kick-pendulum", () => pendulum.reset());
 bindInput("pendulum-length", (e) => { pendulum.length = Number(e.target.value); syncRangeLabels(); });
 bindInput("pendulum-air", (e) => { pendulum.airResistance = Number(e.target.value); syncRangeLabels(); });
+bindInput("pendulum-mass", (e) => { pendulum.mass = Number(e.target.value); syncRangeLabels(); });
 bindInput("pendulum-bob-size", (e) => { pendulum.bobSize = Number(e.target.value); syncRangeLabels(); });
 
 // ─── PROJECTILE BINDINGS ──────────────────────────────────────────────────────
@@ -1636,6 +1576,24 @@ bindInput("diffusion-dot", (e) => { diffusion.dotSize = Number(e.target.value); 
 bindChange("diffusion-color", (e) => { diffusion.colorMode = e.target.value; });
 
 // ─── BROWNIAN BINDINGS ────────────────────────────────────────────────────────
+bindInput("brownian-particles", (e) => { 
+  brownian.numParticles = Number(e.target.value); 
+  syncRangeLabels(); 
+  if (brownian.particles.length < brownian.numParticles) {
+    while (brownian.particles.length < brownian.numParticles) {
+      brownian.particles.push({
+        x: state.width / 2 + (Math.random() - 0.5) * 40,
+        y: state.height / 2 + (Math.random() - 0.5) * 40,
+        vx: 0,
+        vy: 0,
+        trail: []
+      });
+    }
+  } else if (brownian.particles.length > brownian.numParticles) {
+    brownian.particles.length = brownian.numParticles;
+  }
+});
+bindChange("brownian-infinite-trail", (e) => { brownian.infiniteTrail = e.target.checked; });
 bindInput("brownian-kick", (e) => { brownian.kickStrength = Number(e.target.value); syncRangeLabels(); });
 bindInput("brownian-drag", (e) => { brownian.drag = Number(e.target.value); syncRangeLabels(); });
 bindInput("brownian-trail", (e) => { brownian.trailLength = Number(e.target.value); syncRangeLabels(); });
@@ -1647,14 +1605,6 @@ bindInput("lissajous-b", (e) => { lissajous.b = Number(e.target.value); syncRang
 bindInput("lissajous-delta", (e) => { lissajous.delta = Number(e.target.value) * Math.PI; syncRangeLabels(); });
 bindInput("lissajous-amp", (e) => { lissajous.A = Number(e.target.value); syncRangeLabels(); });
 
-// ─── HARMONIC BINDINGS ────────────────────────────────────────────────────────
-bindInput("harmonic-amp1", (e) => { harmonic.components[0].A = Number(e.target.value); syncRangeLabels(); });
-bindInput("harmonic-freq1", (e) => { harmonic.components[0].f = Number(e.target.value); syncRangeLabels(); });
-bindInput("harmonic-amp2", (e) => { harmonic.components[1].A = Number(e.target.value); syncRangeLabels(); });
-bindInput("harmonic-freq2", (e) => { harmonic.components[1].f = Number(e.target.value); syncRangeLabels(); });
-bindInput("harmonic-amp3", (e) => { harmonic.components[2].A = Number(e.target.value); syncRangeLabels(); });
-bindInput("harmonic-freq3", (e) => { harmonic.components[2].f = Number(e.target.value); syncRangeLabels(); });
-bindChange("harmonic-show-components", (e) => { harmonic.showComponents = e.target.checked; });
 
 // ─── ELECTRIC BINDINGS ────────────────────────────────────────────────────────
 bindInput("electric-charge1", (e) => { electric.charges[0].q = Number(e.target.value); syncRangeLabels(); });
@@ -1724,7 +1674,7 @@ canvas.addEventListener("pointermove", (event) => {
     if (state.lastPointerAngle !== null && state.lastPointerAngleTime !== null) {
       const deltaTime = Math.max(now - state.lastPointerAngleTime, 1);
       const deltaAngle = pendulum.angle - state.lastPointerAngle;
-      pendulum.velocity = Math.max(-2.0, Math.min(2.0, (deltaAngle / deltaTime) * 16));
+      pendulum.velocity = Math.max(-10.0, Math.min(10.0, (deltaAngle / deltaTime) * 1000));
     }
     state.lastPointerAngle = pendulum.angle;
     state.lastPointerAngleTime = now;

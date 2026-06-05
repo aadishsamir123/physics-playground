@@ -49,6 +49,14 @@
             <div class="control-group-title">Physics</div>
 
             <label class="control-panel active">
+              <span>Particles</span>
+              <div class="speed-row">
+                <input id="brownian-particles" type="range" min="1" max="100" step="1" value="1" />
+                <span class="range-value" data-value-for="brownian-particles">1</span>
+              </div>
+            </label>
+
+            <label class="control-panel active">
               <span>Kick strength</span>
               <div class="speed-row">
                 <input id="brownian-kick" type="range" min="20" max="600" step="10" value="200" />
@@ -72,6 +80,11 @@
                 <input id="brownian-trail" type="range" min="0" max="200" step="5" value="60" />
                 <span class="range-value" data-value-for="brownian-trail">60</span>
               </div>
+            </label>
+
+            <label class="toggle-row">
+              <input id="brownian-infinite-trail" type="checkbox" />
+              <span>Infinite trail</span>
             </label>
 
             <label class="toggle-row">
