@@ -1692,29 +1692,134 @@ bindChange("collision-right-wall", (e) => { collision.hasRightWall = e.target.ch
 const piPresetBtn = document.getElementById("pi-preset-button");
 if (piPresetBtn) {
   piPresetBtn.addEventListener("click", () => {
-    const aMass = document.getElementById("collision-mass-a");
-    const bMass = document.getElementById("collision-mass-b");
-    const aVel = document.getElementById("collision-vel-a");
-    const bVel = document.getElementById("collision-vel-b");
-    const elas = document.getElementById("collision-elasticity");
-    const rightWall = document.getElementById("collision-right-wall");
+    const wrap = document.querySelector(".canvas-wrap");
+    if (!wrap) return;
+
+    if (document.getElementById("pi-preset-dialog")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "pi-preset-dialog";
+    overlay.style.position = "absolute";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = "100";
+    overlay.style.backdropFilter = "blur(2px)";
+
+    const modal = document.createElement("div");
+    modal.style.background = "#fff";
+    modal.style.padding = "24px";
+    modal.style.borderRadius = "8px";
+    modal.style.boxShadow = "0 10px 25px rgba(0,0,0,0.1)";
+    modal.style.width = "300px";
+    modal.style.display = "flex";
+    modal.style.flexDirection = "column";
+    modal.style.gap = "16px";
+    modal.style.fontFamily = "inherit";
+
+    const title = document.createElement("h3");
+    title.textContent = "Pi Preset Configuration";
+    title.style.margin = "0";
+    title.style.color = "#1e293b";
+
+    const desc = document.createElement("p");
+    desc.textContent = "Enter the mass for the right ball. (e.g. 100 = 31 collisions, 10000 = 314 collisions)";
+    desc.style.margin = "0";
+    desc.style.fontSize = "0.9rem";
+    desc.style.color = "#475569";
+
+    const inputWrap = document.createElement("div");
+    inputWrap.style.display = "flex";
+    inputWrap.style.flexDirection = "column";
+    inputWrap.style.gap = "8px";
+
+    const label = document.createElement("label");
+    label.textContent = "Mass B (kg):";
+    label.style.fontSize = "0.9rem";
+    label.style.fontWeight = "bold";
+    label.style.color = "#334155";
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.value = "100";
+    input.min = "1";
+    input.max = "1000000";
+    input.style.padding = "8px";
+    input.style.border = "1px solid #cbd5e1";
+    input.style.borderRadius = "4px";
+    input.style.fontSize = "1rem";
+
+    inputWrap.appendChild(label);
+    inputWrap.appendChild(input);
+
+    const btnWrap = document.createElement("div");
+    btnWrap.style.display = "flex";
+    btnWrap.style.justifyContent = "flex-end";
+    btnWrap.style.gap = "8px";
+    btnWrap.style.marginTop = "8px";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.className = "ghost-button";
+    cancelBtn.style.padding = "8px 16px";
     
-    if (aMass) aMass.value = 1;
-    if (bMass) bMass.value = 10000;
-    if (aVel) aVel.value = 0;
-    if (bVel) bVel.value = -20;
-    if (elas) elas.value = 1;
-    if (rightWall) rightWall.checked = false;
-    
-    collision.massA = 1;
-    collision.massB = 10000;
-    collision.velA = 0;
-    collision.velB = -20;
-    collision.elasticity = 1.0;
-    collision.hasRightWall = false;
-    
-    syncRangeLabels();
-    collision.reset();
+    const startBtn = document.createElement("button");
+    startBtn.textContent = "Start";
+    startBtn.className = "primary-button";
+    startBtn.style.padding = "8px 16px";
+
+    btnWrap.appendChild(cancelBtn);
+    btnWrap.appendChild(startBtn);
+
+    modal.appendChild(title);
+    modal.appendChild(desc);
+    modal.appendChild(inputWrap);
+    modal.appendChild(btnWrap);
+    overlay.appendChild(modal);
+    wrap.appendChild(overlay);
+
+    const closeDialog = () => {
+      overlay.remove();
+    };
+
+    cancelBtn.addEventListener("click", closeDialog);
+
+    startBtn.addEventListener("click", () => {
+      const selectedMass = Number(input.value) || 100;
+      
+      const aMass = document.getElementById("collision-mass-a");
+      const bMass = document.getElementById("collision-mass-b");
+      const aVel = document.getElementById("collision-vel-a");
+      const bVel = document.getElementById("collision-vel-b");
+      const elas = document.getElementById("collision-elasticity");
+      const rightWall = document.getElementById("collision-right-wall");
+      
+      if (aMass) aMass.value = 1;
+      if (bMass) bMass.value = selectedMass;
+      if (aVel) aVel.value = 0;
+      if (bVel) bVel.value = -60;
+      if (elas) elas.value = 1;
+      if (rightWall) rightWall.checked = false;
+      
+      collision.massA = 1;
+      collision.massB = selectedMass;
+      collision.velA = 0;
+      collision.velB = -60;
+      collision.elasticity = 1.0;
+      collision.hasRightWall = false;
+      
+      syncRangeLabels();
+      collision.reset();
+      
+      collision.b.x = state.width - 150;
+      
+      closeDialog();
+    });
   });
 }
 
