@@ -935,41 +935,46 @@ const collision = {
     const leftWall = wallMargin;
     const rightWall = state.width - wallMargin;
 
-    [this.a, this.b].forEach((p) => {
-      p.x += p.vx * dtSeconds;
-      p.y += p.vy * dtSeconds;
+    const subSteps = 100;
+    const subDt = dtSeconds / subSteps;
 
-      // Wall bounce
-      if (p.x - p.r < leftWall) { p.x = leftWall + p.r; p.vx = Math.abs(p.vx) * this.elasticity; this.collisionCount++; }
-      if (this.hasRightWall && p.x + p.r > rightWall) { p.x = rightWall - p.r; p.vx = -Math.abs(p.vx) * this.elasticity; this.collisionCount++; }
-      if (p.y - p.r < 0) { p.y = p.r; p.vy = Math.abs(p.vy); }
-      if (p.y + p.r > state.height) { p.y = state.height - p.r; p.vy = -Math.abs(p.vy); }
-    });
+    for (let i = 0; i < subSteps; i++) {
+      [this.a, this.b].forEach((p) => {
+        p.x += p.vx * subDt;
+        p.y += p.vy * subDt;
 
-    const dx = this.b.x - this.a.x;
-    const dy = this.b.y - this.a.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist < this.a.r + this.b.r && dist > 0) {
-      const nx = dx / dist;
-      const ny = dy / dist;
-      // Separate
-      const overlap = (this.a.r + this.b.r - dist) / 2;
-      this.a.x -= nx * overlap;
-      this.b.x += nx * overlap;
-      this.a.y -= ny * overlap;
-      this.b.y += ny * overlap;
+        // Wall bounce
+        if (p.x - p.r < leftWall) { p.x = leftWall + p.r; p.vx = Math.abs(p.vx) * this.elasticity; this.collisionCount++; }
+        if (this.hasRightWall && p.x + p.r > rightWall) { p.x = rightWall - p.r; p.vx = -Math.abs(p.vx) * this.elasticity; this.collisionCount++; }
+        if (p.y - p.r < 0) { p.y = p.r; p.vy = Math.abs(p.vy); }
+        if (p.y + p.r > state.height) { p.y = state.height - p.r; p.vy = -Math.abs(p.vy); }
+      });
 
-      const va = this.a.vx * nx + this.a.vy * ny;
-      const vb = this.b.vx * nx + this.b.vy * ny;
-      if (va - vb > 0) { // approaching
-        this.collisionCount++;
-        const ma = this.a.m, mb = this.b.m;
-        const e = this.elasticity;
-        const pa = ((ma - e * mb) * va + (1 + e) * mb * vb) / (ma + mb);
-        const pb = ((mb - e * ma) * vb + (1 + e) * ma * va) / (ma + mb);
-        const da = pa - va, db = pb - vb;
-        this.a.vx += da * nx; this.a.vy += da * ny;
-        this.b.vx += db * nx; this.b.vy += db * ny;
+      const dx = this.b.x - this.a.x;
+      const dy = this.b.y - this.a.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < this.a.r + this.b.r && dist > 0) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        // Separate
+        const overlap = (this.a.r + this.b.r - dist) / 2;
+        this.a.x -= nx * overlap;
+        this.b.x += nx * overlap;
+        this.a.y -= ny * overlap;
+        this.b.y += ny * overlap;
+
+        const va = this.a.vx * nx + this.a.vy * ny;
+        const vb = this.b.vx * nx + this.b.vy * ny;
+        if (va - vb > 0) { // approaching
+          this.collisionCount++;
+          const ma = this.a.m, mb = this.b.m;
+          const e = this.elasticity;
+          const pa = ((ma - e * mb) * va + (1 + e) * mb * vb) / (ma + mb);
+          const pb = ((mb - e * ma) * vb + (1 + e) * ma * va) / (ma + mb);
+          const da = pa - va, db = pb - vb;
+          this.a.vx += da * nx; this.a.vy += da * ny;
+          this.b.vx += db * nx; this.b.vy += db * ny;
+        }
       }
     }
   },
@@ -1683,6 +1688,35 @@ bindInput("collision-vel-a", (e) => { collision.velA = Number(e.target.value); s
 bindInput("collision-vel-b", (e) => { collision.velB = Number(e.target.value); syncRangeLabels(); collision.reset(); });
 bindInput("collision-elasticity", (e) => { collision.elasticity = Number(e.target.value); syncRangeLabels(); });
 bindChange("collision-right-wall", (e) => { collision.hasRightWall = e.target.checked; });
+
+const piPresetBtn = document.getElementById("pi-preset-button");
+if (piPresetBtn) {
+  piPresetBtn.addEventListener("click", () => {
+    const aMass = document.getElementById("collision-mass-a");
+    const bMass = document.getElementById("collision-mass-b");
+    const aVel = document.getElementById("collision-vel-a");
+    const bVel = document.getElementById("collision-vel-b");
+    const elas = document.getElementById("collision-elasticity");
+    const rightWall = document.getElementById("collision-right-wall");
+    
+    if (aMass) aMass.value = 1;
+    if (bMass) bMass.value = 10000;
+    if (aVel) aVel.value = 0;
+    if (bVel) bVel.value = -20;
+    if (elas) elas.value = 1;
+    if (rightWall) rightWall.checked = false;
+    
+    collision.massA = 1;
+    collision.massB = 10000;
+    collision.velA = 0;
+    collision.velB = -20;
+    collision.elasticity = 1.0;
+    collision.hasRightWall = false;
+    
+    syncRangeLabels();
+    collision.reset();
+  });
+}
 
 // ─── DIFFUSION BINDINGS ───────────────────────────────────────────────────────
 bindInput("diffusion-count", (e) => { diffusion.particleCount = Number(e.target.value); syncRangeLabels(); diffusion.reset(); });
