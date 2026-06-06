@@ -1018,7 +1018,7 @@ const collision = {
     ctx2d.fillStyle = "#1f2937";
     ctx2d.font = "bold 16px system-ui";
     ctx2d.textAlign = "right";
-    ctx2d.fillText(`Collisions: ${this.collisionCount}`, state.width - 20, 30);
+    ctx2d.fillText(`Collisions: ${this.collisionCount}`, state.width - 150, 30);
     ctx2d.textAlign = "left";
 
     // Momentum bar
