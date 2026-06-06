@@ -957,11 +957,11 @@ const collision = {
         const nx = dx / dist;
         const ny = dy / dist;
         // Separate
-        const overlap = (this.a.r + this.b.r - dist) / 2;
-        this.a.x -= nx * overlap;
-        this.b.x += nx * overlap;
-        this.a.y -= ny * overlap;
-        this.b.y += ny * overlap;
+        // const overlap = (this.a.r + this.b.r - dist) / 2;
+        // this.a.x -= nx * overlap;
+        // this.b.x += nx * overlap;
+        // this.a.y -= ny * overlap;
+        // this.b.y += ny * overlap;
 
         const va = this.a.vx * nx + this.a.vy * ny;
         const vb = this.b.vx * nx + this.b.vy * ny;
