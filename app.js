@@ -910,10 +910,13 @@ const collision = {
   velA: 180,
   velB: -60,
   elasticity: 1.0,
+  hasRightWall: true,
+  collisionCount: 0,
   a: null,
   b: null,
   labels: [],
   reset() {
+    this.collisionCount = 0;
     const cx = state.width * 0.5;
     const cy = state.height * 0.5;
     const rA = 12 + this.massA * 3;
@@ -927,13 +930,17 @@ const collision = {
   },
   update(dt) {
     const dtSeconds = dt / 1000;
+    const wallMargin = 20;
+    const leftWall = wallMargin;
+    const rightWall = state.width - wallMargin;
+
     [this.a, this.b].forEach((p) => {
       p.x += p.vx * dtSeconds;
       p.y += p.vy * dtSeconds;
 
       // Wall bounce
-      if (p.x - p.r < 0) { p.x = p.r; p.vx = Math.abs(p.vx) * this.elasticity; }
-      if (p.x + p.r > state.width) { p.x = state.width - p.r; p.vx = -Math.abs(p.vx) * this.elasticity; }
+      if (p.x - p.r < leftWall) { p.x = leftWall + p.r; p.vx = Math.abs(p.vx) * this.elasticity; this.collisionCount++; }
+      if (this.hasRightWall && p.x + p.r > rightWall) { p.x = rightWall - p.r; p.vx = -Math.abs(p.vx) * this.elasticity; this.collisionCount++; }
       if (p.y - p.r < 0) { p.y = p.r; p.vy = Math.abs(p.vy); }
       if (p.y + p.r > state.height) { p.y = state.height - p.r; p.vy = -Math.abs(p.vy); }
     });
@@ -954,6 +961,7 @@ const collision = {
       const va = this.a.vx * nx + this.a.vy * ny;
       const vb = this.b.vx * nx + this.b.vy * ny;
       if (va - vb > 0) { // approaching
+        this.collisionCount++;
         const ma = this.a.m, mb = this.b.m;
         const e = this.elasticity;
         const pa = ((ma - e * mb) * va + (1 + e) * mb * vb) / (ma + mb);
@@ -968,6 +976,50 @@ const collision = {
     ctx2d.save();
     ctx2d.fillStyle = "#fff";
     ctx2d.fillRect(0, 0, state.width, state.height);
+
+    const wallMargin = 20;
+    const leftWall = wallMargin;
+    const rightWall = state.width - wallMargin;
+
+    // Draw Left Wall
+    ctx2d.strokeStyle = "#475569";
+    ctx2d.lineWidth = 4;
+    ctx2d.beginPath();
+    ctx2d.moveTo(leftWall, 0);
+    ctx2d.lineTo(leftWall, state.height);
+    ctx2d.stroke();
+    
+    ctx2d.lineWidth = 1;
+    for (let y = -20; y < state.height + 20; y += 15) {
+      ctx2d.beginPath();
+      ctx2d.moveTo(leftWall, y);
+      ctx2d.lineTo(leftWall - 15, y - 15);
+      ctx2d.stroke();
+    }
+
+    // Draw Right Wall (if enabled)
+    if (this.hasRightWall) {
+      ctx2d.lineWidth = 4;
+      ctx2d.beginPath();
+      ctx2d.moveTo(rightWall, 0);
+      ctx2d.lineTo(rightWall, state.height);
+      ctx2d.stroke();
+      
+      ctx2d.lineWidth = 1;
+      for (let y = -20; y < state.height + 20; y += 15) {
+        ctx2d.beginPath();
+        ctx2d.moveTo(rightWall, y);
+        ctx2d.lineTo(rightWall + 15, y - 15);
+        ctx2d.stroke();
+      }
+    }
+
+    // Collision Count
+    ctx2d.fillStyle = "#1f2937";
+    ctx2d.font = "bold 16px system-ui";
+    ctx2d.textAlign = "right";
+    ctx2d.fillText(`Collisions: ${this.collisionCount}`, state.width - 20, 30);
+    ctx2d.textAlign = "left";
 
     // Momentum bar
     const pA = this.a ? Math.abs(this.a.m * this.a.vx) : 0;
@@ -1568,6 +1620,7 @@ bindInput("collision-mass-b", (e) => { collision.massB = Number(e.target.value);
 bindInput("collision-vel-a", (e) => { collision.velA = Number(e.target.value); syncRangeLabels(); collision.reset(); });
 bindInput("collision-vel-b", (e) => { collision.velB = Number(e.target.value); syncRangeLabels(); collision.reset(); });
 bindInput("collision-elasticity", (e) => { collision.elasticity = Number(e.target.value); syncRangeLabels(); });
+bindChange("collision-right-wall", (e) => { collision.hasRightWall = e.target.checked; });
 
 // ─── DIFFUSION BINDINGS ───────────────────────────────────────────────────────
 bindInput("diffusion-count", (e) => { diffusion.particleCount = Number(e.target.value); syncRangeLabels(); diffusion.reset(); });
