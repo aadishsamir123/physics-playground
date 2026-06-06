@@ -1489,19 +1489,80 @@ function initializeCurrentSim() {
 }
 
 function syncSimulationSpeed() {
-  simulationSpeedValue.textContent = `${Number(state.speed).toFixed(2)}x`;
+  const valueNode = document.getElementById("simulation-speed-value");
+  if (valueNode && valueNode.tagName === 'INPUT') {
+    if (document.activeElement !== valueNode) {
+      valueNode.value = Number(state.speed).toFixed(2);
+    }
+  } else if (valueNode) {
+    valueNode.textContent = `${Number(state.speed).toFixed(2)}x`;
+  }
 }
 
 function syncRangeLabels() {
   rangeInputs.forEach((input) => {
-    const valueNode = document.querySelector(`[data-value-for="${input.id}"]`);
+    let valueNode = document.querySelector(`[data-value-for="${input.id}"]`);
+    if (!valueNode && input.id === "simulation-speed") {
+      valueNode = document.getElementById("simulation-speed-value");
+    }
     if (!valueNode) return;
-    if (input.id === "projectile-angle") valueNode.textContent = `${input.value}°`;
-    else if (input.id === "projectile-grid-spacing") valueNode.textContent = `${input.value} px`;
-    else if (input.id === "projectile-grid-opacity") valueNode.textContent = `${Math.round(Number(input.value) * 100)}%`;
-    else if (input.id === "simulation-speed") valueNode.textContent = `${Number(input.value).toFixed(2)}x`;
-    else if (input.dataset.unit) valueNode.textContent = `${input.value}${input.dataset.unit}`;
-    else valueNode.textContent = input.value;
+
+    if (valueNode.tagName !== 'INPUT') {
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'inline-flex';
+      wrapper.style.alignItems = 'center';
+      wrapper.style.gap = '4px';
+
+      const numInput = document.createElement('input');
+      numInput.type = 'number';
+      numInput.className = 'range-value-input';
+      numInput.style.width = '64px';
+      numInput.style.padding = '2px 4px';
+      numInput.style.border = '1px solid #cbd5e1';
+      numInput.style.borderRadius = '4px';
+      numInput.style.fontSize = '0.88rem';
+      numInput.style.textAlign = 'right';
+      numInput.style.color = '#334155';
+      numInput.style.backgroundColor = '#fff';
+      numInput.step = input.step || 'any';
+      numInput.min = input.min;
+      numInput.max = input.max;
+
+      if (valueNode.hasAttribute('data-value-for')) {
+        numInput.setAttribute('data-value-for', input.id);
+      } else {
+        numInput.id = valueNode.id;
+      }
+
+      const unitSpan = document.createElement('span');
+      unitSpan.style.fontSize = '0.88rem';
+      unitSpan.style.color = '#334155';
+      if (input.dataset.unit) unitSpan.textContent = input.dataset.unit;
+      else if (input.id === 'projectile-angle') unitSpan.textContent = '°';
+      else if (input.id === 'projectile-grid-spacing') unitSpan.textContent = ' px';
+      else if (input.id === 'projectile-grid-opacity') unitSpan.textContent = '%';
+      else if (input.id === 'simulation-speed') unitSpan.textContent = 'x';
+
+      wrapper.appendChild(numInput);
+      wrapper.appendChild(unitSpan);
+
+      valueNode.replaceWith(wrapper);
+      valueNode = numInput;
+
+      valueNode.addEventListener('input', (e) => {
+        let val = Number(e.target.value);
+        if (input.id === 'projectile-grid-opacity') val = val / 100;
+        input.value = val;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+
+    if (document.activeElement !== valueNode) {
+      if (input.id === "projectile-grid-opacity") valueNode.value = Math.round(Number(input.value) * 100);
+      else if (input.id === "simulation-speed") valueNode.value = Number(input.value).toFixed(2);
+      else valueNode.value = input.value;
+    }
   });
 }
 
